@@ -179,7 +179,7 @@ const Evaluation: React.FC = () => {
       setError('Please provide scoring instructions.');
       return;
     }
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.API_KEY) {
       setError('API_KEY environment variable not found.');
       return;
     }

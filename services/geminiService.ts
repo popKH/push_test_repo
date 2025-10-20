@@ -1,7 +1,16 @@
 import { GoogleGenAI } from '@google/genai';
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_GEMINI_API_KEY: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
 
 const getApiKey = (): string => {
-  const apiKey = 'AIzaSyAZQlHx4axCnrnVz8CPBG9t_a9V_ED0SVs';
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('API_KEY environment variable not set');
   }
