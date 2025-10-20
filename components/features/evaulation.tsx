@@ -194,34 +194,130 @@ const Evaluation: React.FC = () => {
                 )}
 
                 {scoringResult && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm text-gray-400">Result</div>
-                      <button
-                        onClick={() => setShowRawJson((s) => !s)}
-                        className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700"
-                      >
-                        {showRawJson ? 'Hide Raw' : 'View Raw'}
-                      </button>
-                    </div>
+  <div>
+    <div className="flex items-center justify-between mb-3">
+      <div className="text-sm text-gray-400">Result</div>
+      <button
+        onClick={() => setShowRawJson((s) => !s)}
+        className="text-xs px-2 py-1 rounded bg-gray-800 hover:bg-gray-700"
+      >
+        {showRawJson ? 'Hide Raw' : 'View Raw'}
+      </button>
+    </div>
 
-                    {/* 🌈 Render Markdown beautifully */}
-                    {!showRawJson && typeof scoringResult === 'string' && (
-                      <div className="prose prose-invert prose-sm max-w-none leading-relaxed">
-                        {renderMarkdown(scoringResult)}
-                      </div>
-                    )}
+    {/* --- If Gemini returns raw string --- */}
+    {!showRawJson && typeof scoringResult === 'string' && (
+      <div className="space-y-4 text-sm leading-relaxed text-gray-100">
+        <h3 className="text-lg font-bold text-blue-400 mb-2">AI Evaluation Summary</h3>
+        <pre className="bg-gray-800/80 rounded-lg p-4 text-gray-200 whitespace-pre-wrap border border-gray-700 shadow-inner">
+          {scoringResult
+            .replace(/["{}]/g, '')
+            .replace(/\\n/g, '\n')
+            .replace(/,(?=\s*[A-Za-z0-9_"]+:)/g, '\n')}
+        </pre>
+      </div>
+    )}
 
-                    {/* fallback for raw JSON or plain text */}
-                    {showRawJson && (
-                      <pre className="whitespace-pre-wrap text-xs bg-gray-900/50 p-3 rounded-md overflow-auto">
-                        {typeof scoringResult === 'string'
-                          ? scoringResult
-                          : JSON.stringify(scoringResult, null, 2)}
-                      </pre>
-                    )}
-                  </div>
-                )}
+    {/* --- If Gemini returns structured JSON --- */}
+    {!showRawJson && typeof scoringResult === 'object' && (
+      <div className="space-y-6 text-gray-100">
+        {/* Summary Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Agent</div>
+            <div className="font-semibold text-blue-400 text-lg">
+              {scoringResult.agent_id || '-'}
+            </div>
+          </div>
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Overall Score</div>
+            <div className="font-bold text-green-400 text-lg">
+              {scoringResult.overall_score ?? '-'}
+            </div>
+          </div>
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Grade</div>
+            <div className="font-bold text-yellow-400 text-lg">
+              {scoringResult.grade || '-'}
+            </div>
+          </div>
+        </div>
+
+        {/* Evaluation Table */}
+        {scoringResult.evaluation && (
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-md">
+            <h3 className="text-md font-semibold text-blue-300 mb-3">
+              Evaluation Details
+            </h3>
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-gray-700 text-gray-400 text-xs">
+                  <th className="py-2 px-3">Criterion</th>
+                  <th className="py-2 px-3">Score</th>
+                  <th className="py-2 px-3">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(scoringResult.evaluation).map(([key, val]: any) => (
+                  <tr
+                    key={key}
+                    className="border-b border-gray-700 hover:bg-gray-900/50 transition-colors"
+                  >
+                    <td className="py-2 px-3 font-medium text-gray-100">{key}</td>
+                    <td className="py-2 px-3 text-center text-green-300">
+                      {val?.score ?? '-'}
+                    </td>
+                    <td className="py-2 px-3 text-gray-300">{val?.remarks || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Keywords / Issues / Recommendations */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Keywords</div>
+            <div className="text-sm mt-2 text-blue-200">
+              {(scoringResult.keywords_detected || []).join(', ') || '-'}
+            </div>
+          </div>
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Issues Found</div>
+            <ul className="list-disc list-inside mt-2 text-sm text-red-300">
+              {(scoringResult.issues_found || []).length
+                ? scoringResult.issues_found.map((x: string, i: number) => (
+                    <li key={i}>{x}</li>
+                  ))
+                : <li>-</li>}
+            </ul>
+          </div>
+          <div className="p-3 bg-gray-800 border border-gray-700 rounded-xl">
+            <div className="text-xs text-gray-400 uppercase">Recommendations</div>
+            <ul className="list-disc list-inside mt-2 text-sm text-emerald-300">
+              {(scoringResult.recommendations || []).length
+                ? scoringResult.recommendations.map((x: string, i: number) => (
+                    <li key={i}>{x}</li>
+                  ))
+                : <li>-</li>}
+            </ul>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Raw JSON Fallback */}
+    {showRawJson && (
+      <pre className="whitespace-pre-wrap text-xs bg-gray-900/50 p-3 rounded-md overflow-auto border border-gray-700">
+        {typeof scoringResult === 'string'
+          ? scoringResult
+          : JSON.stringify(scoringResult, null, 2)}
+      </pre>
+    )}
+  </div>
+)}
+
 
                 {!isLoading && !error && !scoringResult && (
                   <div className="flex items-center justify-center h-full text-gray-500">
