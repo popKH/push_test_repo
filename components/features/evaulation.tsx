@@ -52,19 +52,27 @@ const Evaluation: React.FC = () => {
         criteria: activeCriteria,
       })}`;
 
-      const result = await scoreConversation(
-        promptWithConfig,
-        audioBase64,
-        audioFile.type
-      );
+    const result = await scoreConversation(
+      promptWithConfig,
+      audioBase64,
+      audioFile.type
+    );
 
-      // Try to parse JSON result
-      try {
-        const parsed = JSON.parse(result);
-        setScoringResult(parsed);
-      } catch {
-        setScoringResult(result);
-      }
+    // 🧹 Clean Gemini response (remove markdown fences, trim spaces)
+    const cleanedResult = result
+      .replace(/```json/i, '')
+      .replace(/```/g, '')
+      .trim();
+
+    // 🧪 Try to parse JSON
+    try {
+      const parsed = JSON.parse(cleanedResult);
+      setScoringResult(parsed);
+    } catch {
+      // If it’s not valid JSON, show the cleaned text as fallback
+      setScoringResult(cleanedResult);
+    }
+
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'An unexpected error occurred.';
