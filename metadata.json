@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Conversation Scorer",
+  "description": "Upload a WAV audio file of a conversation and provide scoring instructions. Gemini will analyze the audio and provide a score and detailed feedback based on your custom criteria.",
+  "requestFramePermissions": []
+}
